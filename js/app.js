@@ -17,21 +17,6 @@ window.onload = () => {
     document.querySelector('a-scene').addEventListener('loaded', () => {
         loading.style.display = 'none';
         console.log('A-Frame сцена загружена');
-        
-        // Установка параметров сцены для лучшей стабилизации
-        const scene = document.querySelector('a-scene');
-        scene.setAttribute('embedded', '');
-        scene.setAttribute('vr-mode-ui', 'enabled: false');
-        
-        // Настройка камеры
-        const camera = document.querySelector('[gps-projected-camera]');
-        camera.setAttribute('gps-projected-camera', {
-            positionMinAccuracy: 100,
-            simulateLatitude: targetLat,
-            simulateLongitude: targetLon
-        });
-        
-        console.log('Настройки сцены и камеры обновлены');
     });
 
     // Обработка ошибок
@@ -40,18 +25,27 @@ window.onload = () => {
         showError('Ошибка камеры: ' + error.detail.message);
     });
 
+    let lastPosition = null;
+
     // Обработка изменения позиции камеры
-    document.querySelector('[gps-camera]').addEventListener('gps-camera-update-position', (event) => {
-        const currentPosition = event.detail.position;
-        console.log('Получены новые GPS координаты:', currentPosition);
-        
+    const camera = document.querySelector('[gps-camera]');
+    camera.addEventListener('gps-camera-update-position', (event) => {
+        lastPosition = event.detail.position;
+        updatePositionInfo(lastPosition);
+    });
+
+    function updatePositionInfo(position) {
+        if (!position) return;
+
+        console.log('Обновление информации о позиции:', position);
+
         // Обновляем информацию о координатах
-        coordinatesInfo.textContent = `Ваши координаты: ${currentPosition.latitude.toFixed(6)}, ${currentPosition.longitude.toFixed(6)}`;
+        coordinatesInfo.textContent = `Ваши координаты: ${position.latitude.toFixed(6)}, ${position.longitude.toFixed(6)}`;
         
         // Рассчитываем расстояние
         const distance = calculateDistance(
-            currentPosition.latitude,
-            currentPosition.longitude,
+            position.latitude,
+            position.longitude,
             targetLat,
             targetLon
         );
@@ -59,9 +53,9 @@ window.onload = () => {
         console.log('Рассчитанное расстояние:', distance);
         distanceInfo.textContent = `Расстояние до объекта: ${Math.round(distance)} метров`;
         instructions.style.display = 'none';
-    });
+    }
 
-    // Запрос геолокации
+    // Запрос геолокации через браузерное API
     if ("geolocation" in navigator) {
         navigator.geolocation.watchPosition(
             (position) => {
@@ -71,21 +65,12 @@ window.onload = () => {
                     accuracy: position.coords.accuracy
                 };
                 
-                console.log('Геолокация обновлена:', coords);
+                console.log('Геолокация обновлена через браузер:', coords);
                 
-                // Обновляем информацию о координатах
-                coordinatesInfo.textContent = `Ваши координаты: ${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)}`;
-                
-                // Рассчитываем расстояние
-                const distance = calculateDistance(
-                    coords.latitude,
-                    coords.longitude,
-                    targetLat,
-                    targetLon
-                );
-                
-                console.log('Рассчитанное расстояние:', distance);
-                distanceInfo.textContent = `Расстояние до объекта: ${Math.round(distance)} метров`;
+                // Если нет обновлений от AR.js, используем браузерную геолокацию
+                if (!lastPosition) {
+                    updatePositionInfo(coords);
+                }
                 
                 loading.style.display = 'none';
             },
