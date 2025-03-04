@@ -18,7 +18,7 @@ window.onload = () => {
     });
 
     // Обработка изменения позиции
-    document.querySelector('[gps-projected-camera]').addEventListener('gps-camera-update-position', (event) => {
+    document.querySelector('[gps-camera]').addEventListener('gps-camera-update-position', (event) => {
         const distance = calculateDistance(
             event.detail.position.latitude,
             event.detail.position.longitude,
@@ -27,64 +27,40 @@ window.onload = () => {
         );
         
         distanceInfo.textContent = `Расстояние до объекта: ${Math.round(distance)} метров`;
-        
-        if (distance < 100) {
-            instructions.style.display = 'none';
-        } else {
-            instructions.textContent = 'Подойдите ближе к объекту';
-        }
+        instructions.style.display = 'none';
     });
 
-    // Запрос текущей позиции с высокой точностью
+    // Запрос геолокации
     if ("geolocation" in navigator) {
-        const options = {
-            enableHighAccuracy: true,
-            maximumAge: 0
-        };
-
-        navigator.geolocation.watchPosition(
+        navigator.geolocation.getCurrentPosition(
             (position) => {
-                console.log('Геолокация обновлена:', position);
+                console.log('Геолокация получена:', position);
+                loading.style.display = 'none';
             },
             (error) => {
-                let errorMessage = 'Ошибка геолокации: ';
-                switch(error.code) {
-                    case error.PERMISSION_DENIED:
-                        errorMessage += 'Доступ к геолокации запрещен';
-                        break;
-                    case error.POSITION_UNAVAILABLE:
-                        errorMessage += 'Информация о местоположении недоступна';
-                        break;
-                    case error.TIMEOUT:
-                        errorMessage += 'Превышено время ожидания';
-                        break;
-                    default:
-                        errorMessage += error.message;
-                }
-                showError(errorMessage);
+                showError('Ошибка геолокации: ' + error.message);
             },
-            options
+            {
+                enableHighAccuracy: true,
+                maximumAge: 0,
+                timeout: 10000
+            }
         );
     } else {
-        showError('Геолокация не поддерживается вашим браузером');
+        showError('Геолокация не поддерживается');
     }
 };
 
-// Вспомогательные функции
 function showError(message) {
     const error = document.createElement('div');
     error.className = 'error-message';
     error.textContent = message;
     document.body.appendChild(error);
-    
-    // Удаляем сообщение об ошибке через 5 секунд
-    setTimeout(() => {
-        error.remove();
-    }, 5000);
+    setTimeout(() => error.remove(), 5000);
 }
 
 function calculateDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371e3; // радиус Земли в метрах
+    const R = 6371e3;
     const φ1 = lat1 * Math.PI/180;
     const φ2 = lat2 * Math.PI/180;
     const Δφ = (lat2-lat1) * Math.PI/180;
@@ -95,5 +71,5 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
             Math.sin(Δλ/2) * Math.sin(Δλ/2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 
-    return R * c; // расстояние в метрах
+    return R * c;
 } 
