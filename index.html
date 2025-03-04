@@ -10,14 +10,20 @@
     <script>
         AFRAME.registerComponent('surface-tracker', {
             init: function() {
-                this.el.addEventListener('click', () => {
-                    // При клике на поверхность, размещаем куб
+                this.el.addEventListener('click', (event) => {
+                    // Получаем точку касания в мировых координатах
+                    const touchPoint = event.detail.intersection.point;
+                    
+                    // Создаем куб
                     const cube = document.createElement('a-box');
                     cube.setAttribute('material', 'color: red');
                     cube.setAttribute('scale', '0.2 0.2 0.2');
-                    cube.setAttribute('position', '0 0 0');
+                    // Устанавливаем позицию куба в точке касания
+                    cube.setAttribute('position', `${touchPoint.x} ${touchPoint.y} ${touchPoint.z}`);
                     cube.setAttribute('animation', 'property: rotation; to: 0 360 0; loop: true; dur: 3000');
-                    this.el.appendChild(cube);
+                    
+                    // Добавляем куб в сцену, а не к surface
+                    document.querySelector('a-scene').appendChild(cube);
                 });
             }
         });
