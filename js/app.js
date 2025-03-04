@@ -23,9 +23,12 @@ window.onload = () => {
         scene.setAttribute('vr-mode-ui', 'enabled: false');
         
         // Настройка камеры
-        const camera = document.querySelector('[gps-camera]');
-        camera.setAttribute('look-controls', 'enabled: false');
-        camera.setAttribute('arjs-look-controls', 'smoothingFactor: 0.1');
+        const camera = document.querySelector('[gps-projected-camera]');
+        camera.setAttribute('gps-projected-camera', {
+            positionMinAccuracy: 100,
+            simulateLatitude: targetLat,
+            simulateLongitude: targetLon
+        });
         
         console.log('Настройки сцены и камеры обновлены');
     });
@@ -37,7 +40,7 @@ window.onload = () => {
     });
 
     // Обработка изменения позиции
-    document.querySelector('[gps-camera]').addEventListener('gps-camera-update-position', (event) => {
+    document.querySelector('[gps-projected-camera]').addEventListener('gps-camera-update-position', (event) => {
         console.log('Получены новые GPS координаты:', event.detail.position);
         
         const distance = calculateDistance(
@@ -50,15 +53,6 @@ window.onload = () => {
         console.log('Рассчитанное расстояние:', distance);
         distanceInfo.textContent = `Расстояние до объекта: ${Math.round(distance)} метров`;
         instructions.style.display = 'none';
-
-        // Обновляем положение куба только при первой инициализации
-        const cube = document.querySelector('[gps-cube]');
-        if (cube && !cube.hasAttribute('initialized')) {
-            cube.setAttribute('initialized', 'true');
-            cube.setAttribute('position', '0 0 0');
-            cube.setAttribute('rotation', '0 0 0');
-            console.log('Куб зафиксирован в пространстве');
-        }
     });
 
     // Запрос геолокации
@@ -136,18 +130,31 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 // Регистрация компонента gps-cube
 AFRAME.registerComponent('gps-cube', {
     init: function() {
-        this.originalPosition = null;
-        this.el.addEventListener('loaded', () => {
-            // Сохраняем начальное положение
-            this.originalPosition = this.el.getAttribute('position');
-            console.log('Начальное положение куба сохранено:', this.originalPosition);
+        this.el.setAttribute('material', 'color: red');
+        this.el.setAttribute('scale', '20 20 20');
+        
+        // Устанавливаем позицию на уровне земли
+        this.el.setAttribute('position', {x: 0, y: 0, z: 0});
+        
+        // Добавляем обработчик для фиксации позиции
+        this.el.addEventListener('componentchanged', (evt) => {
+            if (evt.detail.name === 'position') {
+                // Если позиция изменилась, возвращаем на землю
+                const position = this.el.getAttribute('position');
+                if (position.y !== 0) {
+                    position.y = 0;
+                    this.el.setAttribute('position', position);
+                }
+            }
         });
     },
     
     tick: function() {
-        // Если есть сохраненное положение, фиксируем куб в этой позиции
-        if (this.originalPosition) {
-            this.el.setAttribute('position', this.originalPosition);
+        // Принудительно устанавливаем Y-координату в 0
+        const position = this.el.getAttribute('position');
+        if (position && position.y !== 0) {
+            position.y = 0;
+            this.el.setAttribute('position', position);
         }
     }
 }); 

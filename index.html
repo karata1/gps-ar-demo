@@ -46,25 +46,20 @@
     <a-scene 
         vr-mode-ui="enabled: false"
         embedded
-        arjs="sourceType: webcam; debugUIEnabled: true; trackingMethod: best; sourceWidth: 1280; sourceHeight: 960; displayWidth: 1280; displayHeight: 960;">
+        arjs="sourceType: webcam; debugUIEnabled: true; trackingMethod: best; sourceWidth: 1280; sourceHeight: 960; displayWidth: 1280; displayHeight: 960; videoTexture: true;">
 
-        <a-camera gps-camera="minDistance: 0; maxDistance: 1000000" rotation-reader>
-            <a-entity 
-                cursor="fuse: false; rayOrigin: mouse;"
-                position="0 0 -1"
-                geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
-                material="color: white; shader: flat">
-            </a-entity>
+        <a-camera 
+            gps-projected-camera="simulateLatitude: 51.145978; simulateLongitude: 71.471626;"
+            rotation-reader>
         </a-camera>
 
         <a-entity 
-            gps-entity-place="latitude: 51.145978; longitude: 71.471626; static: true;"
+            gps-projected-entity-place="latitude: 51.145978; longitude: 71.471626;"
             position="0 0 0"
-            rotation="0 0 0"
             scale="1 1 1"
             gps-cube>
             <a-box 
-                position="0 1 0"
+                position="0 0 0"
                 material="color: red; opacity: 0.8; transparent: true"
                 scale="20 20 20"
                 animation="property: rotation; to: 0 360 0; loop: true; dur: 3000">
