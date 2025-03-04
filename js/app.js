@@ -7,6 +7,9 @@ window.onload = () => {
     const targetLat = 51.145978;
     const targetLon = 71.471626;
 
+    // Проверка поддержки необходимых API
+    checkDeviceSupport();
+
     // Инициализация системы
     document.querySelector('a-scene').addEventListener('loaded', () => {
         loading.style.display = 'none';
@@ -28,13 +31,15 @@ window.onload = () => {
         
         distanceInfo.textContent = `Расстояние до объекта: ${Math.round(distance)} метров`;
         instructions.style.display = 'none';
+
+        console.log('Position updated:', event.detail.position);
     });
 
     // Запрос геолокации
     if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(
+        navigator.geolocation.watchPosition(
             (position) => {
-                console.log('Геолокация получена:', position);
+                console.log('Геолокация обновлена:', position);
                 loading.style.display = 'none';
             },
             (error) => {
@@ -51,7 +56,30 @@ window.onload = () => {
     }
 };
 
+function checkDeviceSupport() {
+    // Проверка поддержки WebGL
+    if (!window.WebGLRenderingContext) {
+        showError('WebGL не поддерживается. Попробуйте другой браузер.');
+        return false;
+    }
+
+    // Проверка поддержки ориентации устройства
+    if (!window.DeviceOrientationEvent) {
+        showError('Датчик ориентации не поддерживается.');
+        return false;
+    }
+
+    // Проверка поддержки камеры
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        showError('Камера не поддерживается.');
+        return false;
+    }
+
+    return true;
+}
+
 function showError(message) {
+    console.error(message);
     const error = document.createElement('div');
     error.className = 'error-message';
     error.textContent = message;
