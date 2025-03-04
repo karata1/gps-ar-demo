@@ -5,20 +5,14 @@ window.onload = () => {
     // Инициализация системы
     document.querySelector('a-scene').addEventListener('loaded', () => {
         loading.style.display = 'none';
+        setTimeout(() => {
+            instructions.style.display = 'none';
+        }, 5000);
     });
 
     // Обработка ошибок
     document.querySelector('a-scene').addEventListener('camera-error', (error) => {
         showError('Ошибка камеры: ' + error.detail.message);
-    });
-
-    // Обработка обнаружения маркера
-    document.querySelector('a-marker').addEventListener('markerFound', () => {
-        instructions.style.display = 'none';
-    });
-
-    document.querySelector('a-marker').addEventListener('markerLost', () => {
-        instructions.style.display = 'block';
     });
 };
 
