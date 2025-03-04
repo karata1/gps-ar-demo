@@ -11,63 +11,100 @@ window.onload = () => {
 
     console.log('Целевые координаты:', { targetLat, targetLon });
 
-    // Проверка поддержки необходимых API
-    checkDeviceSupport();
-
-    // Обработчик кнопки разрешений
-    permitButton.addEventListener('click', async () => {
-        try {
-            // Запрашиваем разрешения на использование датчиков
-            await requestPermissions();
-            // Скрываем окно разрешений
-            permissions.style.display = 'none';
-            // Инициализируем геолокацию
-            initGeolocation();
-        } catch (error) {
-            console.error('Ошибка при запросе разрешений:', error);
-            showError('Пожалуйста, предоставьте все необходимые разрешения для работы AR');
-        }
-    });
-
-    // Функция запроса всех необходимых разрешений
-    async function requestPermissions() {
-        // Запрос разрешения на использование камеры
-        await navigator.mediaDevices.getUserMedia({ video: true });
-
-        // Запрос разрешения на использование геолокации
-        await new Promise((resolve, reject) => {
-            navigator.geolocation.getCurrentPosition(resolve, reject);
-        });
-
-        // Запрос разрешения на использование датчиков движения (для iOS)
-        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-            const permission = await DeviceOrientationEvent.requestPermission();
-            if (permission !== 'granted') {
-                throw new Error('Необходим доступ к датчикам движения');
-            }
-        }
-    }
-
     // Инициализация системы
-    document.querySelector('a-scene').addEventListener('loaded', () => {
-        loading.style.display = 'none';
+    const scene = document.querySelector('a-scene');
+    scene.addEventListener('loaded', () => {
         console.log('A-Frame сцена загружена');
+        initAR();
     });
 
-    // Обработка ошибок
-    document.querySelector('a-scene').addEventListener('camera-error', (error) => {
+    // Обработка ошибок камеры
+    scene.addEventListener('camera-error', (error) => {
         console.error('Ошибка камеры:', error);
         showError('Ошибка камеры: ' + error.detail.message);
     });
 
     let lastPosition = null;
+    let isInitialized = false;
 
-    // Обработка изменения позиции камеры
-    const camera = document.querySelector('[gps-camera]');
-    camera.addEventListener('gps-camera-update-position', (event) => {
-        lastPosition = event.detail.position;
-        updatePositionInfo(lastPosition);
-    });
+    async function initAR() {
+        try {
+            // Проверяем поддержку необходимых API
+            if (!checkDeviceSupport()) {
+                return;
+            }
+
+            // Запрашиваем разрешения при нажатии на кнопку
+            permitButton.addEventListener('click', async () => {
+                try {
+                    loading.style.display = 'flex';
+                    await requestPermissions();
+                    permissions.style.display = 'none';
+                    await startAR();
+                } catch (error) {
+                    console.error('Ошибка при запросе разрешений:', error);
+                    showError('Пожалуйста, предоставьте все необходимые разрешения для работы AR');
+                } finally {
+                    loading.style.display = 'none';
+                }
+            });
+
+        } catch (error) {
+            console.error('Ошибка инициализации AR:', error);
+            showError('Ошибка инициализации AR: ' + error.message);
+        }
+    }
+
+    async function startAR() {
+        if (isInitialized) return;
+        isInitialized = true;
+
+        // Настройка камеры AR
+        const camera = document.querySelector('[gps-camera]');
+        camera.addEventListener('gps-camera-update-position', (event) => {
+            lastPosition = event.detail.position;
+            updatePositionInfo(lastPosition);
+        });
+
+        // Запуск отслеживания геолокации
+        initGeolocation();
+    }
+
+    // Функция запроса всех необходимых разрешений
+    async function requestPermissions() {
+        try {
+            // Сначала запрашиваем разрешение на геолокацию
+            await new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject, {
+                    enableHighAccuracy: true,
+                    timeout: 5000,
+                    maximumAge: 0
+                });
+            });
+            console.log('Разрешение на геолокацию получено');
+
+            // Затем запрашиваем разрешение на использование камеры
+            await navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    facingMode: 'environment'
+                } 
+            });
+            console.log('Разрешение на камеру получено');
+
+            // Запрос разрешения на использование датчиков движения (для iOS)
+            if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                const permission = await DeviceOrientationEvent.requestPermission();
+                if (permission !== 'granted') {
+                    throw new Error('Необходим доступ к датчикам движения');
+                }
+                console.log('Разрешение на датчики движения получено');
+            }
+
+        } catch (error) {
+            console.error('Ошибка при запросе разрешений:', error);
+            throw error;
+        }
+    }
 
     function updatePositionInfo(position) {
         if (!position) return;
@@ -105,8 +142,6 @@ window.onload = () => {
                     if (!lastPosition) {
                         updatePositionInfo(coords);
                     }
-                    
-                    loading.style.display = 'none';
                 },
                 (error) => {
                     console.error('Ошибка геолокации:', error);
