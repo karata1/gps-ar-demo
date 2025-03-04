@@ -11,9 +11,10 @@ window.onload = () => {
 
     console.log('Целевые координаты:', { targetLat, targetLon });
 
-    // Сначала скрываем AR сцену
+    // Сначала скрываем AR сцену и экран загрузки
     const scene = document.querySelector('a-scene');
     scene.style.display = 'none';
+    loading.style.display = 'none';
 
     scene.addEventListener('loaded', () => {
         console.log('A-Frame сцена загружена');
@@ -36,11 +37,14 @@ window.onload = () => {
                 return;
             }
 
+            // Показываем окно разрешений
+            permissions.style.display = 'block';
+
             // Запрашиваем разрешения при нажатии на кнопку
             permitButton.addEventListener('click', async () => {
                 try {
-                    loading.style.display = 'flex';
                     permissions.style.display = 'none';
+                    loading.style.display = 'flex';
                     
                     await requestPermissions();
                     
@@ -51,8 +55,8 @@ window.onload = () => {
                 } catch (error) {
                     console.error('Ошибка при запросе разрешений:', error);
                     showError('Пожалуйста, предоставьте все необходимые разрешения для работы AR');
-                    permissions.style.display = 'block';
                     loading.style.display = 'none';
+                    permissions.style.display = 'block';
                 }
             });
 
