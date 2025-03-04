@@ -43,18 +43,22 @@
         Нажмите на экран для доступа к датчикам устройства
     </div>
 
+    <div id="coordinates-info" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: white; padding: 10px; border-radius: 5px; z-index: 999;">
+        Ваши координаты: определяем...
+    </div>
+
     <a-scene 
         vr-mode-ui="enabled: false"
         embedded
-        arjs="sourceType: webcam; debugUIEnabled: true; trackingMethod: best; sourceWidth: 1280; sourceHeight: 960; displayWidth: 1280; displayHeight: 960; videoTexture: true;">
+        arjs="sourceType: webcam; debugUIEnabled: true; trackingMethod: best; sourceWidth: 1280; sourceHeight: 960; displayWidth: 1280; displayHeight: 960;">
 
         <a-camera 
-            gps-projected-camera="simulateLatitude: 51.145978; simulateLongitude: 71.471626;"
+            gps-camera="minDistance: 0;"
             rotation-reader>
         </a-camera>
 
         <a-entity 
-            gps-projected-entity-place="latitude: 51.145978; longitude: 71.471626;"
+            gps-entity-place="latitude: 51.145978; longitude: 71.471626;"
             position="0 0 0"
             scale="1 1 1"
             gps-cube>

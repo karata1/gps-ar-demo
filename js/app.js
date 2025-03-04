@@ -2,6 +2,7 @@ window.onload = () => {
     const loading = document.getElementById('loading');
     const instructions = document.getElementById('instructions');
     const distanceInfo = document.getElementById('distance-info');
+    const coordinatesInfo = document.getElementById('coordinates-info');
 
     // Координаты объекта
     const targetLat = 51.145978;
@@ -39,13 +40,18 @@ window.onload = () => {
         showError('Ошибка камеры: ' + error.detail.message);
     });
 
-    // Обработка изменения позиции
-    document.querySelector('[gps-projected-camera]').addEventListener('gps-camera-update-position', (event) => {
-        console.log('Получены новые GPS координаты:', event.detail.position);
+    // Обработка изменения позиции камеры
+    document.querySelector('[gps-camera]').addEventListener('gps-camera-update-position', (event) => {
+        const currentPosition = event.detail.position;
+        console.log('Получены новые GPS координаты:', currentPosition);
         
+        // Обновляем информацию о координатах
+        coordinatesInfo.textContent = `Ваши координаты: ${currentPosition.latitude.toFixed(6)}, ${currentPosition.longitude.toFixed(6)}`;
+        
+        // Рассчитываем расстояние
         const distance = calculateDistance(
-            event.detail.position.latitude,
-            event.detail.position.longitude,
+            currentPosition.latitude,
+            currentPosition.longitude,
             targetLat,
             targetLon
         );
@@ -59,11 +65,28 @@ window.onload = () => {
     if ("geolocation" in navigator) {
         navigator.geolocation.watchPosition(
             (position) => {
-                console.log('Геолокация обновлена:', {
+                const coords = {
                     latitude: position.coords.latitude,
                     longitude: position.coords.longitude,
                     accuracy: position.coords.accuracy
-                });
+                };
+                
+                console.log('Геолокация обновлена:', coords);
+                
+                // Обновляем информацию о координатах
+                coordinatesInfo.textContent = `Ваши координаты: ${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)}`;
+                
+                // Рассчитываем расстояние
+                const distance = calculateDistance(
+                    coords.latitude,
+                    coords.longitude,
+                    targetLat,
+                    targetLon
+                );
+                
+                console.log('Рассчитанное расстояние:', distance);
+                distanceInfo.textContent = `Расстояние до объекта: ${Math.round(distance)} метров`;
+                
                 loading.style.display = 'none';
             },
             (error) => {
