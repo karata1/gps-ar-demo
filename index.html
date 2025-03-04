@@ -46,9 +46,9 @@
     <a-scene 
         vr-mode-ui="enabled: false"
         embedded
-        arjs="sourceType: webcam; debugUIEnabled: true; trackingMethod: best;">
+        arjs="sourceType: webcam; debugUIEnabled: true; trackingMethod: best; sourceWidth: 1280; sourceHeight: 960; displayWidth: 1280; displayHeight: 960;">
 
-        <a-camera gps-camera rotation-reader>
+        <a-camera gps-camera="minDistance: 0; maxDistance: 1000000" rotation-reader>
             <a-entity 
                 cursor="fuse: false; rayOrigin: mouse;"
                 position="0 0 -1"
@@ -58,9 +58,17 @@
         </a-camera>
 
         <a-entity 
-            gps-entity-place="latitude: 51.145978; longitude: 71.471626;"
+            gps-entity-place="latitude: 51.145978; longitude: 71.471626; static: true;"
+            position="0 0 0"
+            rotation="0 0 0"
+            scale="1 1 1"
             gps-cube>
-            <a-box position="0 1 0"></a-box>
+            <a-box 
+                position="0 1 0"
+                material="color: red; opacity: 0.8; transparent: true"
+                scale="20 20 20"
+                animation="property: rotation; to: 0 360 0; loop: true; dur: 3000">
+            </a-box>
         </a-entity>
 
     </a-scene>

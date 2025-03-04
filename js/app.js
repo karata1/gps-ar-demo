@@ -16,6 +16,18 @@ window.onload = () => {
     document.querySelector('a-scene').addEventListener('loaded', () => {
         loading.style.display = 'none';
         console.log('A-Frame сцена загружена');
+        
+        // Установка параметров сцены для лучшей стабилизации
+        const scene = document.querySelector('a-scene');
+        scene.setAttribute('embedded', '');
+        scene.setAttribute('vr-mode-ui', 'enabled: false');
+        
+        // Настройка камеры
+        const camera = document.querySelector('[gps-camera]');
+        camera.setAttribute('look-controls', 'enabled: false');
+        camera.setAttribute('arjs-look-controls', 'smoothingFactor: 0.1');
+        
+        console.log('Настройки сцены и камеры обновлены');
     });
 
     // Обработка ошибок
@@ -38,6 +50,15 @@ window.onload = () => {
         console.log('Рассчитанное расстояние:', distance);
         distanceInfo.textContent = `Расстояние до объекта: ${Math.round(distance)} метров`;
         instructions.style.display = 'none';
+
+        // Обновляем положение куба только при первой инициализации
+        const cube = document.querySelector('[gps-cube]');
+        if (cube && !cube.hasAttribute('initialized')) {
+            cube.setAttribute('initialized', 'true');
+            cube.setAttribute('position', '0 0 0');
+            cube.setAttribute('rotation', '0 0 0');
+            console.log('Куб зафиксирован в пространстве');
+        }
     });
 
     // Запрос геолокации
@@ -110,4 +131,23 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 
     return R * c;
-} 
+}
+
+// Регистрация компонента gps-cube
+AFRAME.registerComponent('gps-cube', {
+    init: function() {
+        this.originalPosition = null;
+        this.el.addEventListener('loaded', () => {
+            // Сохраняем начальное положение
+            this.originalPosition = this.el.getAttribute('position');
+            console.log('Начальное положение куба сохранено:', this.originalPosition);
+        });
+    },
+    
+    tick: function() {
+        // Если есть сохраненное положение, фиксируем куб в этой позиции
+        if (this.originalPosition) {
+            this.el.setAttribute('position', this.originalPosition);
+        }
+    }
+}); 
