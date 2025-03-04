@@ -2,32 +2,11 @@
 <html lang="ru">
 <head>
     <meta charset="utf-8">
-    <title>GPS AR Demo</title>
+    <title>AR Demo</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
-    <script>
-        AFRAME.registerComponent('surface-tracker', {
-            init: function() {
-                this.el.addEventListener('click', (event) => {
-                    // Получаем точку касания в мировых координатах
-                    const touchPoint = event.detail.intersection.point;
-                    
-                    // Создаем куб
-                    const cube = document.createElement('a-box');
-                    cube.setAttribute('material', 'color: red');
-                    cube.setAttribute('scale', '0.2 0.2 0.2');
-                    // Устанавливаем позицию куба в точке касания
-                    cube.setAttribute('position', `${touchPoint.x} ${touchPoint.y} ${touchPoint.z}`);
-                    cube.setAttribute('animation', 'property: rotation; to: 0 360 0; loop: true; dur: 3000');
-                    
-                    // Добавляем куб в сцену, а не к surface
-                    document.querySelector('a-scene').appendChild(cube);
-                });
-            }
-        });
-    </script>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body style="margin: 0; overflow: hidden;">
@@ -36,34 +15,29 @@
     </div>
 
     <div id="instructions" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.7); color: white; padding: 20px; border-radius: 10px; text-align: center; z-index: 999;">
-        Наведите камеру на плоскую поверхность и нажмите на неё, чтобы разместить объект
+        Наведите камеру на маркер Hiro
     </div>
 
     <a-scene 
         embedded
-        arjs="trackingMethod: best; debugUIEnabled: false;"
-        renderer="logarithmicDepthBuffer: true; precision: medium;"
+        arjs='sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;'
+        renderer="logarithmicDepthBuffer: true;"
         vr-mode-ui="enabled: false">
 
-        <a-camera 
-            look-controls="enabled: false"
-            arjs-look-controls="smoothingFactor: 0.1"
-            gps-camera="minDistance: 1;"
-            rotation-reader>
-            <a-cursor></a-cursor>
-        </a-camera>
+        <a-marker preset="hiro">
+            <a-box
+                position="0 0.5 0"
+                material="color: red"
+                scale="1 1 1"
+                animation="property: rotation; to: 0 360 0; loop: true; dur: 3000">
+            </a-box>
+        </a-marker>
 
-        <a-entity id="surface" 
-            surface-tracker
-            geometry="primitive: plane; width: 100; height: 100;"
-            material="opacity: 0.0"
-            position="0 0 0"
-            rotation="-90 0 0">
-        </a-entity>
+        <a-entity camera></a-entity>
     </a-scene>
 
-    <div id="distance-info" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: white; padding: 10px; border-radius: 5px;">
-        Найдите плоскую поверхность
+    <div id="info" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: white; padding: 10px; border-radius: 5px;">
+        Для работы AR используйте этот маркер: <a href="https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/images/HIRO.jpg" target="_blank" style="color: white;">Скачать маркер</a>
     </div>
 
     <script src="js/app.js"></script>
