@@ -11,8 +11,10 @@ window.onload = () => {
 
     console.log('Целевые координаты:', { targetLat, targetLon });
 
-    // Инициализация системы
+    // Сначала скрываем AR сцену
     const scene = document.querySelector('a-scene');
+    scene.style.display = 'none';
+
     scene.addEventListener('loaded', () => {
         console.log('A-Frame сцена загружена');
         initAR();
@@ -38,13 +40,18 @@ window.onload = () => {
             permitButton.addEventListener('click', async () => {
                 try {
                     loading.style.display = 'flex';
-                    await requestPermissions();
                     permissions.style.display = 'none';
+                    
+                    await requestPermissions();
+                    
+                    // После получения всех разрешений
+                    loading.style.display = 'none';
+                    scene.style.display = 'block'; // Показываем AR сцену
                     await startAR();
                 } catch (error) {
                     console.error('Ошибка при запросе разрешений:', error);
                     showError('Пожалуйста, предоставьте все необходимые разрешения для работы AR');
-                } finally {
+                    permissions.style.display = 'block';
                     loading.style.display = 'none';
                 }
             });
