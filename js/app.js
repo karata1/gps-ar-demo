@@ -7,21 +7,27 @@ window.onload = () => {
     const targetLat = 51.145978;
     const targetLon = 71.471626;
 
+    console.log('Целевые координаты:', { targetLat, targetLon });
+
     // Проверка поддержки необходимых API
     checkDeviceSupport();
 
     // Инициализация системы
     document.querySelector('a-scene').addEventListener('loaded', () => {
         loading.style.display = 'none';
+        console.log('A-Frame сцена загружена');
     });
 
     // Обработка ошибок
     document.querySelector('a-scene').addEventListener('camera-error', (error) => {
+        console.error('Ошибка камеры:', error);
         showError('Ошибка камеры: ' + error.detail.message);
     });
 
     // Обработка изменения позиции
     document.querySelector('[gps-camera]').addEventListener('gps-camera-update-position', (event) => {
+        console.log('Получены новые GPS координаты:', event.detail.position);
+        
         const distance = calculateDistance(
             event.detail.position.latitude,
             event.detail.position.longitude,
@@ -29,20 +35,24 @@ window.onload = () => {
             targetLon
         );
         
+        console.log('Рассчитанное расстояние:', distance);
         distanceInfo.textContent = `Расстояние до объекта: ${Math.round(distance)} метров`;
         instructions.style.display = 'none';
-
-        console.log('Position updated:', event.detail.position);
     });
 
     // Запрос геолокации
     if ("geolocation" in navigator) {
         navigator.geolocation.watchPosition(
             (position) => {
-                console.log('Геолокация обновлена:', position);
+                console.log('Геолокация обновлена:', {
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                    accuracy: position.coords.accuracy
+                });
                 loading.style.display = 'none';
             },
             (error) => {
+                console.error('Ошибка геолокации:', error);
                 showError('Ошибка геолокации: ' + error.message);
             },
             {
