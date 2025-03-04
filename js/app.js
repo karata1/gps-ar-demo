@@ -14,8 +14,37 @@ window.onload = () => {
     const geoOptions = {
         enableHighAccuracy: true,
         maximumAge: 0,
-        timeout: 27000
+        timeout: 60000 // Увеличиваем таймаут до 60 секунд
     };
+
+    // Функция успешного получения геолокации
+    function geoSuccess(position) {
+        console.log('Геолокация получена:', position);
+        loading.style.display = 'none';
+    }
+
+    // Функция ошибки геолокации
+    function geoError(error) {
+        let errorMessage = 'Ошибка геолокации: ';
+        switch(error.code) {
+            case error.PERMISSION_DENIED:
+                errorMessage += 'Доступ к геолокации запрещен';
+                break;
+            case error.POSITION_UNAVAILABLE:
+                errorMessage += 'Информация о местоположении недоступна';
+                break;
+            case error.TIMEOUT:
+                errorMessage += 'Превышено время ожидания';
+                break;
+            default:
+                errorMessage += error.message;
+        }
+        showError(errorMessage);
+        console.error('Ошибка геолокации:', error);
+    }
+
+    // Запускаем геолокацию
+    navigator.geolocation.watchPosition(geoSuccess, geoError, geoOptions);
 
     // Инициализация системы
     document.querySelector('a-scene').addEventListener('loaded', () => {
@@ -55,6 +84,11 @@ function showError(message) {
     error.className = 'error-message';
     error.textContent = message;
     document.body.appendChild(error);
+    
+    // Удаляем сообщение об ошибке через 5 секунд
+    setTimeout(() => {
+        error.remove();
+    }, 5000);
 }
 
 function calculateDistance(lat1, lon1, lat2, lon2) {
