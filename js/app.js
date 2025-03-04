@@ -9,6 +9,13 @@ window.onload = () => {
         return;
     }
 
+    // Настройка точности геолокации
+    const geoOptions = {
+        enableHighAccuracy: true,
+        maximumAge: 0,
+        timeout: 27000
+    };
+
     // Загрузка данных о точках
     fetch('./data/videos.json')
         .then(response => response.json())
@@ -25,11 +32,23 @@ window.onload = () => {
         locations.forEach(locationData => {
             // Создание AR сущности (куба)
             const entity = document.createElement('a-box');
-            entity.setAttribute('gps-entity-place', `latitude: ${locationData.latitude}; longitude: ${locationData.longitude}`);
+            entity.setAttribute('gps-entity-place', {
+                latitude: locationData.latitude,
+                longitude: locationData.longitude
+            });
             entity.setAttribute('material', 'color: red');
-            entity.setAttribute('scale', '20 20 20'); // Увеличенный размер для лучшей видимости
-            entity.setAttribute('animation', 'property: rotation; dur: 3000; to: 0 360 0; loop: true'); // Вращение для наглядности
+            entity.setAttribute('scale', '20 20 20');
+            entity.setAttribute('animation', 'property: rotation; dur: 3000; to: 0 360 0; loop: true');
+            entity.setAttribute('static-body', '');
             
+            // Добавляем обработчик для стабилизации позиции
+            entity.addEventListener('gps-entity-place-update-position', (event) => {
+                const distance = event.detail.distance;
+                if (distance <= 100) { // Если объект ближе 100 метров
+                    entity.setAttribute('static-body', '');
+                }
+            });
+
             document.querySelector('a-scene').appendChild(entity);
             entities.push({
                 entity,
@@ -38,7 +57,7 @@ window.onload = () => {
         });
     }
 
-    // Обновление информации о расстоянии
+    // Обновление информации о расстоянии с использованием более точной геолокации
     setInterval(() => {
         navigator.geolocation.getCurrentPosition(position => {
             const currentLat = position.coords.latitude;
@@ -57,8 +76,10 @@ window.onload = () => {
                 }
             });
 
-            distanceInfo.textContent = `Ближайший объект: ${Math.round(closestDistance)} метров`;
-        });
+            distanceInfo.textContent = `Расстояние до объекта: ${Math.round(closestDistance)} метров`;
+        }, (error) => {
+            showError('Ошибка геолокации: ' + error.message);
+        }, geoOptions);
     }, 1000);
 };
 

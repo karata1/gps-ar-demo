@@ -17,14 +17,27 @@
     <a-scene 
         embedded
         arjs="sourceType: webcam; debugUIEnabled: true; sourceWidth:1280; sourceHeight:960; displayWidth: 1280; displayHeight: 960;"
-        renderer="antialias: true; alpha: true">
+        renderer="antialias: true; alpha: true"
+        vr-mode-ui="enabled: false">
         
-        <a-camera gps-camera="minDistance: 1; maxDistance: 100000" rotation-reader></a-camera>
+        <a-camera 
+            gps-camera="minDistance: 1; maxDistance: 100000" 
+            rotation-reader
+            position="0 0 0"
+            look-controls="enabled: true"
+            arjs-look-controls="smoothingFactor: 0.1"
+            gps-camera-debug>
+        </a-camera>
         
-        <a-box material="color: red" 
-               scale="20 20 20"
-               gps-entity-place="latitude: 51.145971; longitude: 71.471636"
-               animation="property: rotation; to: 0 360 0; loop: true; dur: 3000"></a-box>
+        <a-box 
+            material="color: red" 
+            scale="20 20 20"
+            gps-entity-place="latitude: 51.145978; longitude: 71.471626"
+            position="0 0 0"
+            rotation="0 0 0"
+            animation="property: rotation; to: 0 360 0; loop: true; dur: 3000"
+            static-body>
+        </a-box>
     </a-scene>
 
     <div id="distance-info" style="position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.7); color: white; padding: 10px; border-radius: 5px;">
