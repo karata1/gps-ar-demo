@@ -1,6 +1,8 @@
 window.onload = () => {
     const distanceInfo = document.getElementById('distance-info');
     const loading = document.getElementById('loading');
+    const instructions = document.getElementById('instructions');
+    let isPlaced = false;
 
     // Проверка поддержки необходимых API
     if (!navigator.geolocation) {
@@ -20,34 +22,30 @@ window.onload = () => {
         loading.style.display = 'none';
     });
 
-    // Обработка обновления позиции
-    window.addEventListener('gps-camera-origin-coord-set', () => {
-        distanceInfo.textContent = 'GPS позиция установлена';
-    });
-
-    window.addEventListener('gps-camera-update-position', (e) => {
-        const box = document.querySelector('a-box');
-        if (!box.getAttribute('gps-entity-place')) return;
-
-        const distance = calculateDistance(
-            e.detail.position.latitude,
-            e.detail.position.longitude,
-            box.getAttribute('gps-entity-place').latitude,
-            box.getAttribute('gps-entity-place').longitude
-        );
-
-        distanceInfo.textContent = `Расстояние до объекта: ${Math.round(distance)} метров`;
-    });
-
-    // Обработка ошибок
-    window.addEventListener('gps-camera-update-position', (error) => {
-        if (error) {
-            showError('Ошибка обновления позиции: ' + error.detail.message);
+    // Обработка клика по поверхности
+    const surface = document.querySelector('#surface');
+    surface.addEventListener('click', (event) => {
+        if (!isPlaced) {
+            isPlaced = true;
+            instructions.style.display = 'none';
+            distanceInfo.textContent = 'Объект размещен на поверхности';
         }
     });
 
-    window.addEventListener('camera-error', (error) => {
+    // Обработка ошибок
+    document.querySelector('a-scene').addEventListener('camera-error', (error) => {
         showError('Ошибка камеры: ' + error.detail.message);
+    });
+
+    // Обработка определения поверхности
+    document.querySelector('a-scene').addEventListener('ar-hit-test-start', () => {
+        distanceInfo.textContent = 'Ищем поверхность...';
+    });
+
+    document.querySelector('a-scene').addEventListener('ar-hit-test-achieved', () => {
+        if (!isPlaced) {
+            distanceInfo.textContent = 'Нажмите на поверхность, чтобы разместить объект';
+        }
     });
 };
 
