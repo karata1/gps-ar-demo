@@ -1,8 +1,9 @@
 window.onload = () => {
     const loading = document.getElementById('loading');
-    const instructions = document.getElementById('instructions');
+    const permissions = document.getElementById('permissions');
     const distanceInfo = document.getElementById('distance-info');
     const coordinatesInfo = document.getElementById('coordinates-info');
+    const permitButton = document.getElementById('permitButton');
 
     // Координаты объекта
     const targetLat = 51.145978;
@@ -12,6 +13,40 @@ window.onload = () => {
 
     // Проверка поддержки необходимых API
     checkDeviceSupport();
+
+    // Обработчик кнопки разрешений
+    permitButton.addEventListener('click', async () => {
+        try {
+            // Запрашиваем разрешения на использование датчиков
+            await requestPermissions();
+            // Скрываем окно разрешений
+            permissions.style.display = 'none';
+            // Инициализируем геолокацию
+            initGeolocation();
+        } catch (error) {
+            console.error('Ошибка при запросе разрешений:', error);
+            showError('Пожалуйста, предоставьте все необходимые разрешения для работы AR');
+        }
+    });
+
+    // Функция запроса всех необходимых разрешений
+    async function requestPermissions() {
+        // Запрос разрешения на использование камеры
+        await navigator.mediaDevices.getUserMedia({ video: true });
+
+        // Запрос разрешения на использование геолокации
+        await new Promise((resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject);
+        });
+
+        // Запрос разрешения на использование датчиков движения (для iOS)
+        if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+            const permission = await DeviceOrientationEvent.requestPermission();
+            if (permission !== 'granted') {
+                throw new Error('Необходим доступ к датчикам движения');
+            }
+        }
+    }
 
     // Инициализация системы
     document.querySelector('a-scene').addEventListener('loaded', () => {
@@ -52,40 +87,40 @@ window.onload = () => {
         
         console.log('Рассчитанное расстояние:', distance);
         distanceInfo.textContent = `Расстояние до объекта: ${Math.round(distance)} метров`;
-        instructions.style.display = 'none';
     }
 
-    // Запрос геолокации через браузерное API
-    if ("geolocation" in navigator) {
-        navigator.geolocation.watchPosition(
-            (position) => {
-                const coords = {
-                    latitude: position.coords.latitude,
-                    longitude: position.coords.longitude,
-                    accuracy: position.coords.accuracy
-                };
-                
-                console.log('Геолокация обновлена через браузер:', coords);
-                
-                // Если нет обновлений от AR.js, используем браузерную геолокацию
-                if (!lastPosition) {
-                    updatePositionInfo(coords);
+    function initGeolocation() {
+        if ("geolocation" in navigator) {
+            navigator.geolocation.watchPosition(
+                (position) => {
+                    const coords = {
+                        latitude: position.coords.latitude,
+                        longitude: position.coords.longitude,
+                        accuracy: position.coords.accuracy
+                    };
+                    
+                    console.log('Геолокация обновлена через браузер:', coords);
+                    
+                    // Если нет обновлений от AR.js, используем браузерную геолокацию
+                    if (!lastPosition) {
+                        updatePositionInfo(coords);
+                    }
+                    
+                    loading.style.display = 'none';
+                },
+                (error) => {
+                    console.error('Ошибка геолокации:', error);
+                    showError('Ошибка геолокации: ' + error.message);
+                },
+                {
+                    enableHighAccuracy: true,
+                    maximumAge: 0,
+                    timeout: 10000
                 }
-                
-                loading.style.display = 'none';
-            },
-            (error) => {
-                console.error('Ошибка геолокации:', error);
-                showError('Ошибка геолокации: ' + error.message);
-            },
-            {
-                enableHighAccuracy: true,
-                maximumAge: 0,
-                timeout: 10000
-            }
-        );
-    } else {
-        showError('Геолокация не поддерживается');
+            );
+        } else {
+            showError('Геолокация не поддерживается');
+        }
     }
 };
 
