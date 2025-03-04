@@ -18,7 +18,7 @@ window.onload = () => {
     });
 
     // Обработка изменения позиции
-    document.querySelector('[gps-camera]').addEventListener('gps-camera-update-position', (event) => {
+    document.querySelector('[gps-projected-camera]').addEventListener('gps-camera-update-position', (event) => {
         const distance = calculateDistance(
             event.detail.position.latitude,
             event.detail.position.longitude,
@@ -27,43 +27,47 @@ window.onload = () => {
         );
         
         distanceInfo.textContent = `Расстояние до объекта: ${Math.round(distance)} метров`;
-        instructions.style.display = 'none';
+        
+        if (distance < 100) {
+            instructions.style.display = 'none';
+        } else {
+            instructions.textContent = 'Подойдите ближе к объекту';
+        }
     });
 
-    // Проверка поддержки геолокации
-    if (!navigator.geolocation) {
-        showError('Геолокация не поддерживается вашим браузером');
-        return;
-    }
-
-    // Запрос текущей позиции
-    navigator.geolocation.getCurrentPosition(
-        (position) => {
-            console.log('Геолокация получена:', position);
-        },
-        (error) => {
-            let errorMessage = 'Ошибка геолокации: ';
-            switch(error.code) {
-                case error.PERMISSION_DENIED:
-                    errorMessage += 'Доступ к геолокации запрещен';
-                    break;
-                case error.POSITION_UNAVAILABLE:
-                    errorMessage += 'Информация о местоположении недоступна';
-                    break;
-                case error.TIMEOUT:
-                    errorMessage += 'Превышено время ожидания';
-                    break;
-                default:
-                    errorMessage += error.message;
-            }
-            showError(errorMessage);
-        },
-        {
+    // Запрос текущей позиции с высокой точностью
+    if ("geolocation" in navigator) {
+        const options = {
             enableHighAccuracy: true,
-            maximumAge: 0,
-            timeout: 27000
-        }
-    );
+            maximumAge: 0
+        };
+
+        navigator.geolocation.watchPosition(
+            (position) => {
+                console.log('Геолокация обновлена:', position);
+            },
+            (error) => {
+                let errorMessage = 'Ошибка геолокации: ';
+                switch(error.code) {
+                    case error.PERMISSION_DENIED:
+                        errorMessage += 'Доступ к геолокации запрещен';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        errorMessage += 'Информация о местоположении недоступна';
+                        break;
+                    case error.TIMEOUT:
+                        errorMessage += 'Превышено время ожидания';
+                        break;
+                    default:
+                        errorMessage += error.message;
+                }
+                showError(errorMessage);
+            },
+            options
+        );
+    } else {
+        showError('Геолокация не поддерживается вашим браузером');
+    }
 };
 
 // Вспомогательные функции

@@ -6,20 +6,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/three.js/build/ar-threex-location-only.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
     <script>
         AFRAME.registerComponent('gps-cube', {
             init: function() {
-                // Координаты из data/videos.json
                 const latitude = 51.145978;
                 const longitude = 71.471626;
                 
                 this.el.setAttribute('gps-entity-place', `latitude: ${latitude}; longitude: ${longitude}`);
                 this.el.setAttribute('material', 'color: red');
-                this.el.setAttribute('scale', '1 1 1');
-                this.el.setAttribute('position', '0 0 0');
+                this.el.setAttribute('scale', '10 10 10');
                 this.el.setAttribute('animation', 'property: rotation; to: 0 360 0; loop: true; dur: 3000');
+
+                // Обработка изменения расстояния
+                this.el.addEventListener('gps-entity-place-update-positon', (event) => {
+                    const distance = event.detail.distance;
+                    // Масштабируем куб в зависимости от расстояния
+                    const scale = Math.min(10, Math.max(0.5, distance / 100));
+                    this.el.setAttribute('scale', `${scale} ${scale} ${scale}`);
+                });
             }
         });
     </script>
@@ -31,20 +36,20 @@
     </div>
 
     <div id="instructions" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.7); color: white; padding: 20px; border-radius: 10px; text-align: center; z-index: 999;">
-        Подождите, определяем ваше местоположение...
+        Поверните телефон, чтобы увидеть куб
     </div>
 
     <a-scene 
         embedded
         vr-mode-ui="enabled: false"
-        arjs='sourceType: webcam; videoTexture: true; debugUIEnabled: false; sourceWidth: 1280; sourceHeight: 960; displayWidth: 1280; displayHeight: 960;'>
+        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono; sourceWidth: 1280; sourceHeight: 960; displayWidth: 1280; displayHeight: 960;">
 
         <a-camera 
-            gps-camera="minDistance: 0;"
+            gps-projected-camera="gpsMinDistance: 0; simulateLatitude: 51.145978; simulateLongitude: 71.471626"
             rotation-reader>
         </a-camera>
 
-        <a-box gps-cube></a-box>
+        <a-box gps-cube position="0 1 0"></a-box>
 
     </a-scene>
 
